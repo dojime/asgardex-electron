@@ -1,12 +1,10 @@
 import { EtherscanProvider } from '@ethersproject/providers'
 import { Network as ClientNetwork } from '@xchainjs/xchain-client'
-import * as ETH from '@xchainjs/xchain-ethereum'
+import { Client, getDecimal as ethGetDecimal } from '@xchainjs/xchain-ethereum'
 import { Asset, assetToString } from '@xchainjs/xchain-util'
-import { right, left } from 'fp-ts/lib/Either'
 import * as FP from 'fp-ts/lib/function'
 import * as O from 'fp-ts/lib/Option'
 import * as Rx from 'rxjs'
-import { Observable, Observer } from 'rxjs'
 import * as RxOp from 'rxjs/operators'
 
 import { Network } from '../../../shared/api/types'
@@ -16,9 +14,7 @@ import * as C from '../clients'
 import { Address$, ExplorerUrl$, GetExplorerTxUrl$, GetExplorerAddressUrl$ } from '../clients/types'
 import { ClientStateForViews } from '../clients/types'
 import { getClient, getClientStateForViews } from '../clients/utils'
-import { keystoreService } from '../wallet/keystore'
-import { getPhrase } from '../wallet/util'
-import { ClientState, ClientState$, Client$ } from './types'
+import { Client$ } from './types'
 
 export const toEthNetwork = (network: Network) => {
   // In case of 'chaosnet' + 'mainnet` we stick on `mainnet`
@@ -29,7 +25,7 @@ export const toEthNetwork = (network: Network) => {
 /**
  * Ethereum network depending on `Network`
  */
-const ethereumNetwork$: Observable<ClientNetwork> = network$.pipe(RxOp.map(toEthNetwork))
+const clientNetwork$: Rx.Observable<ClientNetwork> = network$.pipe(RxOp.map(toEthNetwork))
 
 const ETHERSCAN_API_KEY = envOrDefault(process.env.REACT_APP_ETHERSCAN_API_KEY, '')
 const INFURA_PROJECT_ID = envOrDefault(process.env.REACT_APP_INFURA_PROJECT_ID, '')
@@ -38,53 +34,32 @@ const ETHPLORER_API_KEY = envOrDefault(process.env.REACT_APP_ETHPLORER_API_KEY, 
 const ETHPLORER_API_URL = envOrDefault(process.env.REACT_APP_ETHPLORER_API_URL, 'https://api.ethplorer.io')
 
 /**
- * Stream to create an observable EthereumClient depending on existing phrase in keystore
+ * Stream to create an observable Client depending on existing phrase in keystore
  *
- * Whenever a phrase has been added to keystore, a new EthereumClient will be created.
+ * Whenever a phrase has been added to keystore, a new Client will be created.
  * By the other hand: Whenever a phrase has been removed, the client is set to `none`
- * A EthereumClient will never be created as long as no phrase is available
+ * A Client will never be created as long as no phrase is available
  */
-const clientState$: ClientState$ = Rx.combineLatest([keystoreService.keystore$, ethereumNetwork$]).pipe(
-  RxOp.switchMap(
-    ([keystore, network]) =>
-      new Observable((observer: Observer<ClientState>) => {
-        const client: ClientState = FP.pipe(
-          getPhrase(keystore),
-          O.chain((phrase) => {
-            try {
-              const infuraCreds = INFURA_PROJECT_ID
-                ? {
-                    infuraCreds: {
-                      projectId: INFURA_PROJECT_ID
-                    }
-                  }
-                : {}
-              const client = new ETH.Client({
-                network,
-                etherscanApiKey: ETHERSCAN_API_KEY,
-                ethplorerApiKey: ETHPLORER_API_KEY,
-                ethplorerUrl: ETHPLORER_API_URL,
-                phrase,
-                ...infuraCreds
-              })
-              return O.some(right(client)) as ClientState
-            } catch (error) {
-              return O.some(left(error))
-            }
-          })
-        )
-        observer.next(client)
-      }) as Observable<ClientState>
-  )
-)
+const clientState$ = C.clientState(Client, clientNetwork$, {
+  etherscanApiKey: ETHERSCAN_API_KEY,
+  ethplorerApiKey: ETHPLORER_API_KEY,
+  ethplorerUrl: ETHPLORER_API_URL,
+  ...(INFURA_PROJECT_ID
+    ? {
+        infuraCreds: {
+          projectId: INFURA_PROJECT_ID
+        }
+      }
+    : {})
+})
 
 const client$: Client$ = clientState$.pipe(RxOp.map(getClient), RxOp.shareReplay(1))
 
 /**
- * Helper stream to provide "ready-to-go" state of latest `EthereumClient`, but w/o exposing the client
+ * Helper stream to provide "ready-to-go" state of latest `Client`, but w/o exposing the client
  * It's needed by views only.
  */
-const clientViewState$: Observable<ClientStateForViews> = clientState$.pipe(RxOp.map(getClientStateForViews))
+const clientViewState$: Rx.Observable<ClientStateForViews> = clientState$.pipe(RxOp.map(getClientStateForViews))
 
 /**
  * Current `Address` depending on selected network
@@ -130,7 +105,7 @@ const getDecimal = async (asset: Asset, network: Network): Promise<number> => {
         const ethNetwork = toEthNetwork(network)
         const provider = new EtherscanProvider(ethNetwork, ETHERSCAN_API_KEY)
         try {
-          const decimal = await ETH.getDecimal(asset, provider)
+          const decimal = await ethGetDecimal(asset, provider)
           // store result in memory
           decimalMap.set(assetString, decimal)
           return Promise.resolve(decimal)

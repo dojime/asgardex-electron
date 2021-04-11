@@ -28,16 +28,19 @@ export const loadTxs$ = ({
     O.toUndefined
   )
 
-  const address = FP.pipe(walletAddress, O.getOrElse(client.getAddress))
-
-  return Rx.from(
-    client.getTransactions({
-      asset: txAsset,
-      address,
-      limit,
-      offset
-    })
-  ).pipe(
+  return FP.pipe(
+    walletAddress,
+    O.map<string, Rx.Observable<string>>(Rx.of),
+    O.getOrElse(() => Rx.from(client.getAddress())),
+    RxOp.map((address) =>
+      client.getTransactions({
+        asset: txAsset,
+        address,
+        limit,
+        offset
+      })
+    ),
+    Rx.from,
     RxOp.map(RD.success),
     RxOp.catchError((error) =>
       Rx.of(

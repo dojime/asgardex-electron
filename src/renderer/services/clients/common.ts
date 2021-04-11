@@ -1,8 +1,15 @@
+import { Network, XChainClientFactory, XChainClientType, XChainClientParamsType } from '@xchainjs/xchain-client'
+import { observableEither as RxOE } from 'fp-ts-rxjs'
+import * as FP from 'fp-ts/function'
+import { right, left } from 'fp-ts/lib/Either'
 import * as O from 'fp-ts/lib/Option'
+import * as Rx from 'rxjs'
 import * as RxOp from 'rxjs/operators'
 
 import { eqOString } from '../../helpers/fp/eq'
-import { ExplorerUrl$, GetExplorerAddressUrl$, GetExplorerTxUrl$, XChainClient$ } from './types'
+import { keystoreService } from '../wallet/keystore'
+import { getPhrase } from '../wallet/util'
+import { ClientState, ExplorerUrl$, GetExplorerAddressUrl$, GetExplorerTxUrl$, XChainClient$ } from './types'
 
 export const explorerUrl$: (client$: XChainClient$) => ExplorerUrl$ = (client$) =>
   client$.pipe(
@@ -16,3 +23,34 @@ export const getExplorerTxUrl$: (client$: XChainClient$) => GetExplorerTxUrl$ = 
 
 export const getExplorerAddressUrl$: (client$: XChainClient$) => GetExplorerAddressUrl$ = (client$) =>
   client$.pipe(RxOp.map(O.map((client) => client.getExplorerAddressUrl)), RxOp.shareReplay(1))
+
+export const clientState = <T extends XChainClientFactory<any, any, any>>( // eslint-disable-line @typescript-eslint/no-explicit-any
+  Client: XChainClientType<T>,
+  clientNetwork$: Rx.Observable<Network>,
+  clientParams?: ((network: Network) => XChainClientParamsType<T>) | XChainClientParamsType<T>
+) =>
+  Rx.combineLatest([keystoreService.keystore$, clientNetwork$]).pipe(
+    RxOp.switchMap(([keystore, network]) =>
+      FP.pipe(
+        getPhrase(keystore),
+        O.map((phrase) =>
+          Rx.from(
+            Client.create({
+              network,
+              phrase,
+              ...((typeof clientParams === 'function'
+                ? (clientParams as (network: Network) => XChainClientParamsType<T>)
+                : () => clientParams)(network) ?? {})
+            })
+          )
+        ),
+        O.map(RxOp.map((client) => right(client))),
+        O.map(RxOp.catchError((error) => Rx.of(left(error)))),
+        RxOE.fromOption(() => O.none),
+        RxOE.fold(
+          () => Rx.of(O.none as ClientState<XChainClientType<T>>),
+          RxOp.map((x) => O.some(x) as ClientState<XChainClientType<T>>)
+        )
+      )
+    )
+  )

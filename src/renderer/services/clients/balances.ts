@@ -1,7 +1,9 @@
 import * as RD from '@devexperts/remote-data-ts'
 import { Address, XChainClient } from '@xchainjs/xchain-client'
 import { Asset } from '@xchainjs/xchain-util'
+import { observableEither as RxOE } from 'fp-ts-rxjs'
 import * as A from 'fp-ts/Array'
+import * as E from 'fp-ts/lib/Either'
 import * as FP from 'fp-ts/lib/function'
 import * as O from 'fp-ts/lib/Option'
 import * as Rx from 'rxjs'
@@ -35,9 +37,20 @@ const loadBalances$ = ({
   FP.pipe(
     address,
     O.fromNullable,
+    RxOE.fromOption(() => undefined),
+    RxOE.swap,
     // Try to use client address, if parameter `address` is undefined
-    O.alt(() => O.tryCatch(() => client.getAddress())),
-    O.fold(
+    RxOE.map(() =>
+      FP.pipe(
+        client.getAddress(),
+        Rx.from,
+        RxOp.map(E.left),
+        RxOp.catchError(() => Rx.of(E.right(undefined)))
+      )
+    ),
+    RxOE.flatten,
+    RxOE.swap,
+    RxOE.fold(
       // TODO (@Veado) i18n
       () =>
         Rx.of(
