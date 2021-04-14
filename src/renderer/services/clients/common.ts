@@ -28,8 +28,13 @@ export const clientState = <T extends XChainClientFactory<any, any, any>>( // es
   Client: XChainClientType<T>,
   clientNetwork$: Rx.Observable<Network>,
   clientParams?: ((network: Network) => XChainClientParamsType<T>) | XChainClientParamsType<T>
-) =>
-  Rx.combineLatest([keystoreService.keystore$, clientNetwork$]).pipe(
+) => {
+  const clientName = /[0-9a-z]+\.[0-9a-z]+\.(com|org|io|info)/i.exec(Client.toString())?.[0] ?? '<unknown>'
+  return Rx.combineLatest([keystoreService.keystore$, clientNetwork$]).pipe(
+    RxOp.map((x) => {
+      console.log(`clientState(${clientName})`, x)
+      return x
+    }),
     RxOp.switchMap(([keystore, network]) =>
       FP.pipe(
         getPhrase(keystore),
@@ -45,8 +50,13 @@ export const clientState = <T extends XChainClientFactory<any, any, any>>( // es
           )
         ),
         O.map(RxOp.map((client) => right(client))),
-        O.map(RxOp.catchError((error) => Rx.of(left(error)))),
-        RxOE.fromOption(() => O.none),
+        O.map(
+          RxOp.catchError((error) => {
+            console.error(`clientState(${clientName})`, error)
+            return Rx.of(left(error))
+          })
+        ),
+        RxOE.fromOption(() => undefined),
         RxOE.fold(
           () => Rx.of(O.none as ClientState<XChainClientType<T>>),
           RxOp.map((x) => O.some(x) as ClientState<XChainClientType<T>>)
@@ -54,3 +64,4 @@ export const clientState = <T extends XChainClientFactory<any, any, any>>( // es
       )
     )
   )
+}

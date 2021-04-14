@@ -21,18 +21,18 @@ const clientNetwork$: Rx.Observable<ClientNetwork> = network$.pipe(
 )
 
 /**
- * Stream to create an observable BinanceClient depending on existing phrase in keystore
+ * Stream to create an observable Client depending on existing phrase in keystore
  *
- * Whenever a phrase has been added to keystore, a new BinanceClient will be created.
+ * Whenever a phrase has been added to keystore, a new Client will be created.
  * By the other hand: Whenever a phrase has been removed, the client is set to `none`
- * A BinanceClient will never be created as long as no phrase is available
+ * A Client will never be created as long as no phrase is available
  */
 const clientState$ = C.clientState(Client, clientNetwork$)
 
 const client$: Client$ = clientState$.pipe(RxOp.map(getClient), RxOp.shareReplay(1))
 
 /**
- * Helper stream to provide "ready-to-go" state of latest `BinanceClient`, but w/o exposing the client
+ * Helper stream to provide "ready-to-go" state of latest `Client`, but w/o exposing the client
  * It's needed by views only.
  */
 const clientViewState$: Rx.Observable<ClientStateForViews> = clientState$.pipe(RxOp.map(getClientStateForViews))
