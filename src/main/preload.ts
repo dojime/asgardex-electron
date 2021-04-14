@@ -3,6 +3,7 @@ import { contextBridge } from 'electron'
 import { getFileStoreApi } from './api/fileStore'
 import { apiHDWallet } from './api/hdwallet'
 import { apiKeystore } from './api/keystore'
+import { apiKKTransport } from './api/kktransport'
 import { apiLang } from './api/lang'
 import { apiUrl } from './api/url'
 
@@ -24,6 +25,7 @@ contextBridge.exposeInMainWorld('apiLang', apiLang)
 contextBridge.exposeInMainWorld('apiUrl', apiUrl)
 // `apiHDWallet` object
 contextBridge.exposeInMainWorld('apiHDWallet', apiHDWallet)
+contextBridge.exposeInMainWorld('apiKKTransport', apiKKTransport)
 // api for storage objects
 contextBridge.exposeInMainWorld('apiCommonStorage', getFileStoreApi('common'))
 contextBridge.exposeInMainWorld('apiUserNodesStorage', getFileStoreApi('userNodes'))

@@ -1,5 +1,6 @@
 import { join } from 'path'
 
+import { ElectronKeepKeyMinimalTransport } from '@shapeshiftoss/hdwallet-keepkey-extensible-electron'
 import { Keystore } from '@xchainjs/xchain-crypto'
 import { Chain } from '@xchainjs/xchain-util'
 import { BrowserWindow, app, ipcMain, nativeImage } from 'electron'
@@ -132,6 +133,14 @@ const initIPC = () => {
   ipcMain.handle(IPCMessages.GET_LEDGER_ADDRESS, (_, chain: Chain, network: Network) => getAddress(chain, network))
   ipcMain.handle(IPCMessages.SEND_LEDGER_TX, (_, chain: Chain, network: Network, txInfo: LedgerTxInfo) =>
     sendTx(chain, network, txInfo)
+  )
+
+  const kkServer = new ElectronKeepKeyMinimalTransport()
+  ipcMain.handle('apiKKTransport:connect', (_, serialNumber?: string) => kkServer.connect(serialNumber))
+  ipcMain.handle('apiKKTransport:disconnect', (_) => kkServer.disconnect())
+  ipcMain.handle('apiKKTransport:readChunk', (_, debugLink?: boolean) => kkServer.readChunk(debugLink))
+  ipcMain.handle('apiKKTransport:writeChunk', (_, buf: Uint8Array, debugLink?: boolean) =>
+    kkServer.writeChunk(buf, debugLink)
   )
 
   // Register all file-stored data services

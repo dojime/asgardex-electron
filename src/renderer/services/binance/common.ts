@@ -27,7 +27,29 @@ const clientNetwork$: Rx.Observable<ClientNetwork> = network$.pipe(
  * By the other hand: Whenever a phrase has been removed, the client is set to `none`
  * A Client will never be created as long as no phrase is available
  */
-const clientState$ = C.clientState(Client, clientNetwork$)
+const clientState$ = C.clientState(Client, clientNetwork$, {
+  transport: window.apiKKTransport,
+  getPin: async (): Promise<string> => {
+    console.log('getPin', 'begin')
+    const out = await new Promise((resolve) => {
+      const foo: any = window
+      foo['kkPin'] = resolve
+      console.log('please call kkPin')
+    })
+    console.log('getPin', out)
+    return (out as unknown) as string
+  },
+  getPassphrase: async (): Promise<string> => {
+    console.log('getPassphrase', 'begin')
+    const out = await new Promise((resolve) => {
+      const foo: any = window
+      foo['kkPassphrase'] = resolve
+      console.log('please call kkPassphrase')
+    })
+    console.log('getPassphrase', out)
+    return (out as unknown) as string
+  }
+})
 
 const client$: Client$ = clientState$.pipe(RxOp.map(getClient), RxOp.shareReplay(1))
 

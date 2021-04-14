@@ -1,3 +1,4 @@
+import { KeepKeyMinimalTransport } from '@shapeshiftoss/hdwallet-keepkey-extensible'
 import { FeeRate } from '@xchainjs/xchain-bitcoin'
 import { Address, TxParams } from '@xchainjs/xchain-client'
 import { Keystore } from '@xchainjs/xchain-crypto'
@@ -82,6 +83,8 @@ export type ApiHDWallet = {
   sendTxInLedger: (chain: Chain, network: Network, txInfo: LedgerTxInfo) => Promise<Either<LedgerErrorId, string>>
 }
 
+export type ApiKKTransport = KeepKeyMinimalTransport
+
 declare global {
   interface Window {
     /**
@@ -92,6 +95,7 @@ declare global {
     apiLang: ApiLang
     apiUrl: ApiUrl
     apiHDWallet: ApiHDWallet
+    apiKKTransport: ApiKKTransport
     apiCommonStorage: ApiFileStoreService<StoreFileData<'common'>>
     apiUserNodesStorage: ApiFileStoreService<StoreFileData<'userNodes'>>
   }
