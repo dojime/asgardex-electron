@@ -22,6 +22,9 @@ const common = (_ /* env */, argv) => ({
   node: {
     __dirname: false,
     __filename: false
+  },
+  externals: async ({ _context, request }) => {
+    return `commonjs ${request}`
   }
   // Add `node-hid` to externals dure build issues - see https://github.com/thorchain/asgardex-electron/pull/881
   // https://webpack.js.org/configuration/externals/#root
