@@ -41,7 +41,7 @@ const defaultProps: SendFormBNBProps = {
     ),
 
   isLoading: false,
-  addressValidation: (_) => true,
+  addressValidation: (_: any) => true,
   fee: RD.success(baseAmount(37500)),
   reloadFeesHandler: () => console.log('reload fees'),
   validatePassword$: mockValidatePassword$,

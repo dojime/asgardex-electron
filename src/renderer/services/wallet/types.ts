@@ -30,6 +30,12 @@ export type KeystoreState = O.Option<O.Option<KeystoreContent>>
 export type ValidatePasswordHandler = (password: string) => LiveData<Error, void>
 export type ValidatePasswordLD = LiveData<Error, void>
 
+export class InvalidPasswordError extends Error {
+  get message() {
+    return 'wallet.password.confirmation.error'
+  }
+}
+
 export type ImportKeystoreLD = LiveData<Error, void>
 export type LoadKeystoreLD = LiveData<Error, Keystore>
 
@@ -47,6 +53,22 @@ export type KeystoreService = {
    * No need to store any success data. Only status
    */
   validatePassword$: ValidatePasswordHandler
+}
+
+export type PinRequestOpts = {
+  title: string
+  validator?: RegExp | ((pin: string) => Promise<true | string>)
+  validationFailed?: string
+}
+export type PinRequest = PinRequestOpts & {
+  resolve: (_: string | null) => void
+  reject: (_: Error) => void
+}
+export type PinRequestState = O.Option<PinRequest>
+export type PinService = {
+  pinRequestState$: Rx.Observable<PinRequestState>
+  requestPin: (opts: PinRequestOpts) => Promise<string | null>
+  cancelPinRequest: () => void
 }
 
 /**

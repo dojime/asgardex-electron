@@ -274,7 +274,7 @@ export const AssetsTableCollapsable: React.FC<Props> = (props): JSX.Element => {
 
       const walletAddress = FP.pipe(
         oWalletAddress,
-        O.getOrElse(() => intl.formatMessage({ id: 'wallet.errors.address.invalid' }))
+        O.getOrElse(() => (RD.isPending(balancesRD) ? '' : intl.formatMessage({ id: 'wallet.errors.address.invalid' })))
       )
 
       const header = (
@@ -285,13 +285,17 @@ export const AssetsTableCollapsable: React.FC<Props> = (props): JSX.Element => {
           <Col xs={0} md={12} lg={10}>
             <Styled.HeaderAddress>
               {walletAddress}
-              <Styled.CopyLabelContainer
-                onClick={(event) => {
-                  event.preventDefault()
-                  event.stopPropagation()
-                }}>
-                <Styled.CopyLabel copyable={{ text: walletAddress }} />
-              </Styled.CopyLabelContainer>
+              {walletAddress !== '' ? (
+                <Styled.CopyLabelContainer
+                  onClick={(event) => {
+                    event.preventDefault()
+                    event.stopPropagation()
+                  }}>
+                  <Styled.CopyLabel copyable={{ text: walletAddress }} />
+                </Styled.CopyLabelContainer>
+              ) : (
+                <></>
+              )}
             </Styled.HeaderAddress>
           </Col>
           <Col xs={10} md={6} lg={10}>

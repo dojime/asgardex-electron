@@ -1,5 +1,4 @@
 import { Network as ClientNetwork } from '@xchainjs/xchain-client'
-import { Client } from '@xchainjs/xchain-thorchain'
 import * as Rx from 'rxjs'
 import * as RxOp from 'rxjs/operators'
 
@@ -27,7 +26,7 @@ const clientNetwork$: Rx.Observable<ClientNetwork> = network$.pipe(RxOp.map(toTh
  * By the other hand: Whenever a phrase is removed, the client will be set to `none`
  * A Client will never be created if a phrase is not available
  */
-const clientState$ = C.clientState(Client, clientNetwork$)
+const clientState$ = C.clientState('THOR', clientNetwork$)
 
 const client$: Client$ = clientState$.pipe(RxOp.map(getClient), RxOp.shareReplay(1))
 

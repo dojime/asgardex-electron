@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useEffect, useState } from 'react'
 
 import { Form } from 'antd'
 import * as FP from 'fp-ts/lib/function'
@@ -9,17 +9,19 @@ import { Label } from '../../uielements/label'
 import * as Styled from './PrivateModal.style'
 
 type Props = {
+  title?: string
   visible: boolean
-  invalidPassword?: boolean
-  validatingPassword?: boolean
+  invalidPassword?: boolean | string
+  validatingPassword?: boolean | string
   onConfirm?: (password: string) => void
-  onOk?: FP.Lazy<void>
+  onOk?: (password?: string) => void
   onCancel?: FP.Lazy<void>
   isSuccess?: boolean
 }
 
 export const PrivateModal: React.FC<Props> = (props): JSX.Element => {
   const {
+    title,
     visible,
     invalidPassword,
     validatingPassword,
@@ -31,25 +33,30 @@ export const PrivateModal: React.FC<Props> = (props): JSX.Element => {
 
   const intl = useIntl()
 
+  const [password, setPassword] = useState('')
+  const [confirmed, setConfirmed] = useState(false)
+  const [confirmedAtLeastOnce, setConfirmedAtLeastOnce] = useState(false)
+
   /**
    * Call onOk on success only
    */
   useEffect(() => {
-    if (isSuccess) {
-      onOk()
+    if (isSuccess && confirmed) {
+      onOk(password)
     }
-  }, [isSuccess, onOk])
-
-  const [password, setPassword] = useState('')
+  }, [isSuccess, confirmed, onOk, password])
 
   const onChangePasswordHandler = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
+      setConfirmed(false)
       setPassword(e.target.value)
     },
     [setPassword]
   )
 
   const onConfirmCb = useCallback(() => {
+    setConfirmed(true)
+    setConfirmedAtLeastOnce(true)
     onConfirm(password)
   }, [onConfirm, password])
 
@@ -57,7 +64,7 @@ export const PrivateModal: React.FC<Props> = (props): JSX.Element => {
 
   return (
     <Styled.Modal
-      title={intl.formatMessage({ id: 'wallet.password.confirmation' })}
+      title={intl.formatMessage({ id: title ?? 'wallet.password.confirmation' })}
       visible={visible}
       onOk={onOkCb}
       onCancel={onCancel}
@@ -68,7 +75,14 @@ export const PrivateModal: React.FC<Props> = (props): JSX.Element => {
       <Form autoComplete="off">
         <Form.Item
           className={invalidPassword ? 'has-error' : ''}
-          extra={validatingPassword ? `${intl.formatMessage({ id: 'wallet.password.confirmation.pending' })}...` : ''}>
+          extra={
+            (validatingPassword ?? false) !== false
+              ? `${intl.formatMessage({
+                  id:
+                    typeof validatingPassword === 'string' ? validatingPassword : 'wallet.password.confirmation.pending'
+                })}...`
+              : ''
+          }>
           <Input
             type="password"
             typevalue="normal"
@@ -80,9 +94,11 @@ export const PrivateModal: React.FC<Props> = (props): JSX.Element => {
             autoFocus
             onPressEnter={onOkCb}
           />
-          {invalidPassword && (
+          {confirmedAtLeastOnce && (invalidPassword ?? false) !== false && (
             <Label color="error" textTransform="uppercase">
-              {intl.formatMessage({ id: 'wallet.password.confirmation.error' })}!
+              {intl.formatMessage({
+                id: typeof invalidPassword === 'string' ? invalidPassword : 'wallet.password.confirmation.error'
+              })}
             </Label>
           )}
         </Form.Item>

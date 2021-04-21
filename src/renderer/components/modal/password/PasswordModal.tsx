@@ -11,17 +11,18 @@ import { ValidatePasswordLD } from '../../../services/wallet/types'
  * Wrapper around `PrivateModal` to validate password using `validatePassword$` stream
  */
 export type Props = {
-  onSuccess: FP.Lazy<void>
+  onSuccess: (password: string) => void
   onClose: FP.Lazy<void>
   validatePassword$: (_: string) => ValidatePasswordLD
+  title?: string
 }
 
-export const PasswordModal: React.FC<Props> = ({ onSuccess, onClose, validatePassword$ }) => {
+export const PasswordModal: React.FC<Props> = ({ onSuccess, onClose, validatePassword$, title }) => {
   const [passwordToValidate, setPasswordToValidate] = useState('')
 
   const passwordValidationResult$ = useMemo(() => validatePassword$(passwordToValidate), [
-    passwordToValidate,
-    validatePassword$
+    validatePassword$,
+    passwordToValidate
   ])
 
   const passwordValidationRD = useObservableState(passwordValidationResult$, RD.initial)
@@ -31,12 +32,19 @@ export const PasswordModal: React.FC<Props> = ({ onSuccess, onClose, validatePas
     setPasswordToValidate('')
   }, [onClose, setPasswordToValidate])
 
-  const onPasswordValidationSucceed = useCallback(() => {
-    onSuccess()
-  }, [onSuccess])
+  const onPasswordValidationSucceed = useCallback(
+    (password: string) => {
+      onSuccess(password)
+    },
+    [onSuccess]
+  )
 
   const confirmProps = useMemo(() => {
-    const props = { onCancel: closePrivateModal, visible: true }
+    const props = {
+      onCancel: closePrivateModal,
+      visible: true,
+      title
+    }
     return FP.pipe(
       passwordValidationRD,
       RD.fold(
@@ -49,9 +57,9 @@ export const PasswordModal: React.FC<Props> = ({ onSuccess, onClose, validatePas
           validatingPassword: true,
           onConfirm: () => null
         }),
-        () => ({
+        (err) => ({
           ...props,
-          invalidPassword: true,
+          invalidPassword: err?.message || true,
           onConfirm: setPasswordToValidate
         }),
         () => ({
@@ -62,7 +70,7 @@ export const PasswordModal: React.FC<Props> = ({ onSuccess, onClose, validatePas
         })
       )
     )
-  }, [passwordValidationRD, setPasswordToValidate, closePrivateModal, onPasswordValidationSucceed])
+  }, [passwordValidationRD, setPasswordToValidate, closePrivateModal, onPasswordValidationSucceed, title])
 
   return <PrivateModal {...confirmProps} />
 }

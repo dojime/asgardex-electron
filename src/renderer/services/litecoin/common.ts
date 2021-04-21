@@ -1,5 +1,5 @@
 import { Network as ClientNetwork } from '@xchainjs/xchain-client'
-import { Client, NodeAuth } from '@xchainjs/xchain-litecoin'
+import { NodeAuth } from '@xchainjs/xchain-litecoin'
 import * as Rx from 'rxjs'
 import * as RxOp from 'rxjs/operators'
 
@@ -37,10 +37,16 @@ const NODE_AUTH: NodeAuth = {
  * By the other hand: Whenever a phrase is removed, the client will be set to `none`
  * A Client will never be created if a phrase is not available
  */
-const clientState$ = C.clientState(Client, clientNetwork$, (network) => ({
-  nodeUrl: network === 'mainnet' ? LTC_NODE_MAINNET_URL : LTC_NODE_TESTNET_URL,
-  nodeAuth: NODE_AUTH
-}))
+const clientState$ = C.clientState(
+  'LTC',
+  clientNetwork$,
+  clientNetwork$.pipe(
+    RxOp.map((network) => ({
+      nodeUrl: network === 'mainnet' ? LTC_NODE_MAINNET_URL : LTC_NODE_TESTNET_URL,
+      nodeAuth: NODE_AUTH
+    }))
+  )
+)
 
 const client$: Client$ = clientState$.pipe(RxOp.map(C.getClient), RxOp.shareReplay(1))
 

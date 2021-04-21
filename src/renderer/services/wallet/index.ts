@@ -1,6 +1,7 @@
 import { reloadBalances, reloadBalancesByChain, balancesState$, chainBalances$ } from './balances'
 import { setSelectedAsset, selectedAsset$ } from './common'
 import { keystoreService, removeKeystore } from './keystore'
+import { pinService } from './pin'
 import { getTxs$, loadTxs, explorerUrl$, getExplorerTxUrl$, resetTxsPage } from './transaction'
 
 /**
@@ -8,6 +9,7 @@ import { getTxs$, loadTxs, explorerUrl$, getExplorerTxUrl$, resetTxsPage } from 
  */
 export {
   keystoreService,
+  pinService,
   removeKeystore,
   setSelectedAsset,
   selectedAsset$,

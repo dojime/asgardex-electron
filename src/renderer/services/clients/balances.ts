@@ -73,7 +73,8 @@ const loadBalances$ = ({
           ),
           startWith(RD.pending)
         )
-    )
+    ),
+    startWith(RD.pending)
   )
 
 /**

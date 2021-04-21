@@ -1,4 +1,3 @@
-import { Client } from '@xchainjs/xchain-bitcoin'
 import { Network as ClientNetwork } from '@xchainjs/xchain-client'
 import * as Rx from 'rxjs'
 import * as RxOp from 'rxjs/operators'
@@ -27,7 +26,7 @@ const clientNetwork$: Rx.Observable<ClientNetwork> = network$.pipe(
  * By the other hand: Whenever a phrase has been removed, the client is set to `none`
  * A Client will never be created as long as no phrase is available
  */
-const clientState$ = C.clientState(Client, clientNetwork$)
+const clientState$ = C.clientState('BTC', clientNetwork$)
 
 const client$: Client$ = clientState$.pipe(RxOp.map(C.getClient), RxOp.shareReplay(1))
 

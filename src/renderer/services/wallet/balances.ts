@@ -274,7 +274,7 @@ export const chainBalances$: ChainBalances$ = Rx.combineLatest(
 ).pipe(
   // we ignore all `ChainBalances` with state of `initial` balances
   // (e.g. a not connected Ledger )
-  RxOp.map(A.filter(({ balances }) => !RD.isInitial(balances)))
+  RxOp.map(A.filter(({ balances }) => true || !RD.isInitial(balances)))
 )
 
 /**

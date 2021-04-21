@@ -11,7 +11,15 @@ import { truncateAddress } from '../../helpers/addressHelper'
 import { liveData } from '../../helpers/rx/liveData'
 import { observableState } from '../../helpers/stateHelper'
 import { INITIAL_KEYSTORE_STATE } from './const'
-import { Phrase, KeystoreService, KeystoreState, ValidatePasswordLD, ImportKeystoreLD, LoadKeystoreLD } from './types'
+import {
+  Phrase,
+  KeystoreService,
+  KeystoreState,
+  ValidatePasswordLD,
+  ImportKeystoreLD,
+  LoadKeystoreLD,
+  InvalidPasswordError
+} from './types'
 import { hasImportedKeystore } from './util'
 
 const { get$: getKeystoreState$, set: setKeystoreState } = observableState<KeystoreState>(INITIAL_KEYSTORE_STATE)
@@ -111,7 +119,17 @@ const validatePassword$ = (password: string): ValidatePasswordLD =>
         switchMap((keystore) => Rx.from(decryptFromKeystore(keystore, password))),
         map(RD.success),
         liveData.map(() => undefined),
-        catchError((err) => Rx.of(RD.failure(err))),
+        catchError((err) =>
+          Rx.of(
+            RD.failure(
+              err === 'Invalid password'
+                ? new InvalidPasswordError()
+                : err instanceof Error
+                ? err
+                : new Error(String(err))
+            )
+          )
+        ),
         startWith(RD.pending)
       )
     : Rx.of(RD.initial)

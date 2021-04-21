@@ -1,6 +1,6 @@
 import { EtherscanProvider } from '@ethersproject/providers'
 import { Network as ClientNetwork } from '@xchainjs/xchain-client'
-import { Client, getDecimal as ethGetDecimal } from '@xchainjs/xchain-ethereum'
+import { getDecimal as ethGetDecimal } from '@xchainjs/xchain-ethereum'
 import { Asset, assetToString } from '@xchainjs/xchain-util'
 import * as FP from 'fp-ts/lib/function'
 import * as O from 'fp-ts/lib/Option'
@@ -40,18 +40,22 @@ const ETHPLORER_API_URL = envOrDefault(process.env.REACT_APP_ETHPLORER_API_URL, 
  * By the other hand: Whenever a phrase has been removed, the client is set to `none`
  * A Client will never be created as long as no phrase is available
  */
-const clientState$ = C.clientState(Client, clientNetwork$, {
-  etherscanApiKey: ETHERSCAN_API_KEY,
-  ethplorerApiKey: ETHPLORER_API_KEY,
-  ethplorerUrl: ETHPLORER_API_URL,
-  ...(INFURA_PROJECT_ID
-    ? {
-        infuraCreds: {
-          projectId: INFURA_PROJECT_ID
+const clientState$ = C.clientState(
+  'ETH',
+  clientNetwork$,
+  Rx.of({
+    etherscanApiKey: ETHERSCAN_API_KEY,
+    ethplorerApiKey: ETHPLORER_API_KEY,
+    ethplorerUrl: ETHPLORER_API_URL,
+    ...(INFURA_PROJECT_ID
+      ? {
+          infuraCreds: {
+            projectId: INFURA_PROJECT_ID
+          }
         }
-      }
-    : {})
-})
+      : {})
+  })
+)
 
 const client$: Client$ = clientState$.pipe(RxOp.map(getClient), RxOp.shareReplay(1))
 

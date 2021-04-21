@@ -1,4 +1,4 @@
-import { Client, ClientUrl, NodeAuth } from '@xchainjs/xchain-bitcoincash'
+import { ClientUrl, NodeAuth } from '@xchainjs/xchain-bitcoincash'
 import { Network as ClientNetwork } from '@xchainjs/xchain-client'
 import * as Rx from 'rxjs'
 import * as RxOp from 'rxjs/operators'
@@ -42,11 +42,15 @@ const NODE_AUTH: NodeAuth = {
  * By the other hand: Whenever a phrase has been removed, the client is set to `none`
  * A Client will never be created as long as no phrase is available
  */
-const clientState$ = C.clientState(Client, clientNetwork$, {
-  haskoinUrl: HASKOIN_API_URL,
-  nodeUrl: NODE_URL,
-  nodeAuth: NODE_AUTH
-})
+const clientState$ = C.clientState(
+  'BCH',
+  clientNetwork$,
+  Rx.of({
+    haskoinUrl: HASKOIN_API_URL,
+    nodeUrl: NODE_URL,
+    nodeAuth: NODE_AUTH
+  })
+)
 
 const client$: Client$ = clientState$.pipe(RxOp.map(C.getClient), RxOp.shareReplay(1))
 
