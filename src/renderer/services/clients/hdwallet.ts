@@ -1,3 +1,4 @@
+import { ElectronKeepKeyAdapter } from '@xchainjs/hdwallet-keepkey-electron'
 import { ClientFactories, createKeepKeyWallet } from '@xchainjs/xchain-hdwallet'
 // import { hdwallet } from '@xchainjs/xchain-client'
 // import { ClientFactories, createNativeWallet } from '@xchainjs/xchain-hdwallet'
@@ -16,7 +17,7 @@ const clientFactories$ = Rx.of(ClientFactories)
 
 const unlockParams$ = Rx.from(
   createKeepKeyWallet({
-    transport: window.apiKKTransport,
+    adapterType: ElectronKeepKeyAdapter,
     getPin: async (): Promise<string> => {
       const out = await pinService.requestPin({
         title: 'Enter PIN',

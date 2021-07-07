@@ -1,6 +1,7 @@
 import { join } from 'path'
 
-import { ElectronKeepKeyMinimalTransport } from '@shapeshiftoss/hdwallet-keepkey-extensible-electron'
+import { ElectronKeepKeyAdapterServer } from '@shapeshiftoss/hdwallet-keepkey-electron'
+import { NodeWebUSBAdapterDelegate } from '@shapeshiftoss/hdwallet-keepkey-nodewebusb'
 import { Keystore } from '@xchainjs/xchain-crypto'
 import { Chain } from '@xchainjs/xchain-util'
 import { BrowserWindow, app, ipcMain, nativeImage } from 'electron'
@@ -135,13 +136,8 @@ const initIPC = () => {
     sendTx(chain, network, txInfo)
   )
 
-  const kkServer = new ElectronKeepKeyMinimalTransport()
-  ipcMain.handle('apiKKTransport:connect', (_, serialNumber?: string) => kkServer.connect(serialNumber))
-  ipcMain.handle('apiKKTransport:disconnect', (_) => kkServer.disconnect())
-  ipcMain.handle('apiKKTransport:readChunk', (_, debugLink?: boolean) => kkServer.readChunk(debugLink))
-  ipcMain.handle('apiKKTransport:writeChunk', (_, buf: Uint8Array, debugLink?: boolean) =>
-    kkServer.writeChunk(buf, debugLink)
-  )
+  const kkServer = new ElectronKeepKeyAdapterServer(NodeWebUSBAdapterDelegate)
+  kkServer.listen()
 
   // Register all file-stored data services
   Object.entries(DEFAULT_STORAGES).forEach(([name, defaultValue]) => {

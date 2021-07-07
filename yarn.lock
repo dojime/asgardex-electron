@@ -2789,19 +2789,6 @@
     lodash "^4.17.15"
     rxjs "^6.4.0"
 
-"@shapeshiftoss/hdwallet-keepkey-extensible-electron@file:../hdwallet/packages/hdwallet-keepkey-extensible-electron":
-  version "1.13.6"
-  dependencies:
-    "@shapeshiftoss/hdwallet-keepkey-extensible" "file:../hdwallet/packages/hdwallet-keepkey-extensible"
-    webusb "^2.2.0"
-
-"@shapeshiftoss/hdwallet-keepkey-extensible@file:../hdwallet/packages/hdwallet-keepkey-extensible":
-  version "1.13.6"
-  dependencies:
-    "@shapeshiftoss/hdwallet-core" "file:../hdwallet/packages/hdwallet-core"
-    "@shapeshiftoss/hdwallet-keepkey" "file:../hdwallet/packages/hdwallet-keepkey"
-    bytebuffer "^5.0.1"
-
 "@shapeshiftoss/hdwallet-keepkey@file:../hdwallet/packages/hdwallet-keepkey":
   version "1.13.6"
   dependencies:
@@ -4532,14 +4519,6 @@
 
 "@xchainjs/xchain-ethereum@file:../xchainjs-lib/packages/xchain-ethereum":
   version "0.18.0"
-
-"@xchainjs/xchain-hdwallet@file:../xchainjs-lib/packages/xchain-hdwallet":
-  version "0.0.1"
-  dependencies:
-    "@binance-chain/javascript-sdk" "^4.1.1"
-    "@shapeshiftoss/hdwallet-core" "file:../hdwallet/packages/hdwallet-core"
-    "@shapeshiftoss/hdwallet-keepkey-extensible" "file:../hdwallet/packages/hdwallet-keepkey-extensible"
-    "@shapeshiftoss/hdwallet-native" "file:../hdwallet/packages/hdwallet-native"
 
 "@xchainjs/xchain-litecoin@file:../xchainjs-lib/packages/xchain-litecoin":
   version "0.4.1"
