@@ -1,4 +1,4 @@
-import { Client } from '@xchainjs/xchain-thorchain'
+import { Client, ClientUrl } from '@xchainjs/xchain-thorchain'
 import { right, left } from 'fp-ts/lib/Either'
 import * as FP from 'fp-ts/lib/function'
 import * as O from 'fp-ts/lib/Option'
@@ -12,6 +12,24 @@ import { getClient } from '../clients/utils'
 import { keystoreService } from '../wallet/keystore'
 import { getPhrase } from '../wallet/util'
 import { Client$, ClientState } from './types'
+
+/**
+ * Get the client url.
+ *
+ * @returns {ClientUrl} The client url (both mainnet and testnet) for thorchain.
+ */
+const getDefaultClientUrl = (): ClientUrl => {
+  return {
+    testnet: {
+      node: 'http://18.159.71.230:1317',
+      rpc: 'http://18.159.71.230:26657'
+    },
+    mainnet: {
+      node: 'https://thornode.thorchain.info',
+      rpc: 'https://rpc.thorchain.info'
+    }
+  }
+}
 
 /**
  * Stream to create an observable ThorchainClient depending on existing phrase in keystore
@@ -29,6 +47,7 @@ const clientState$ = Rx.combineLatest([keystoreService.keystore$, clientNetwork$
           O.chain((phrase) => {
             try {
               const client = new Client({
+                clientUrl: getDefaultClientUrl(),
                 network,
                 phrase
               })
